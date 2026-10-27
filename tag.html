@@ -1,0 +1,1369 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>ตัวรันป้ายไซส์</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  :root{
+    --bg:#E3E7EC;
+    --surface:#F8F6F0;
+    --surface-2:#EFEBE1;
+    --border:#DCD5C4;
+    --border-cool:#C6CCD6;
+    --text:#24262B;
+    --text-muted:#6E7178;
+    --ink:#2E3A75;
+    --ink-strong:#212B57;
+    --ink-contrast:#FDFCF9;
+    --danger:#A8442E;
+    --danger-soft:#F0DCD2;
+    --success:#3C7360;
+    --success-soft:#DCEAE2;
+    --focus:#4A5FC7;
+    --shadow: 0 1px 2px rgba(30,30,40,.06), 0 10px 24px -12px rgba(30,30,40,.22);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14161B;
+      --surface:#1E212A;
+      --surface-2:#262A35;
+      --border:#333847;
+      --border-cool:#2B2F3A;
+      --text:#E8E9EE;
+      --text-muted:#9297A3;
+      --ink:#93A3EF;
+      --ink-strong:#B3C0F5;
+      --ink-contrast:#14161B;
+      --danger:#E08A67;
+      --danger-soft:#3B2721;
+      --success:#74C0A2;
+      --success-soft:#1E332B;
+      --focus:#A9B7FF;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14161B;
+    --surface:#1E212A;
+    --surface-2:#262A35;
+    --border:#333847;
+    --border-cool:#2B2F3A;
+    --text:#E8E9EE;
+    --text-muted:#9297A3;
+    --ink:#93A3EF;
+    --ink-strong:#B3C0F5;
+    --ink-contrast:#14161B;
+    --danger:#E08A67;
+    --danger-soft:#3B2721;
+    --success:#74C0A2;
+    --success-soft:#1E332B;
+    --focus:#A9B7FF;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Sarabun', 'Noto Sans Thai', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{
+    font-family:'IBM Plex Mono','Chakra Petch', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  #app{
+    max-width:440px;
+    margin:0 auto;
+    padding:20px 16px 48px;
+    min-height:100dvh;
+  }
+  .screen{ display:flex; flex-direction:column; gap:16px; animation: rise .38s ease both; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){
+    .screen{ animation:none; }
+    *{ transition:none !important; }
+  }
+
+  .eyebrow{
+    font-family:'Chakra Petch', sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+  }
+
+  h1{
+    font-family:'Chakra Petch', sans-serif;
+    font-weight:700;
+    font-size:30px;
+    line-height:1.15;
+    margin:6px 0 2px;
+    text-wrap:balance;
+    color:var(--text);
+  }
+  h2{
+    font-family:'Chakra Petch', sans-serif;
+    font-weight:700;
+    font-size:22px;
+    margin:4px 0 2px;
+    text-wrap:balance;
+  }
+  .lede{ color:var(--text-muted); font-size:14.5px; line-height:1.55; max-width:34ch; }
+
+  /* ---------- Setup screen ---------- */
+  .setup-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:24px 20px 22px;
+    box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:16px;
+  }
+  .field{ display:flex; flex-direction:column; gap:6px; position:relative; }
+  .field-label{ font-size:13px; font-weight:600; color:var(--text-muted); }
+  .field input[type="text"]{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:20px;
+    font-variant-numeric: tabular-nums;
+    padding:12px 14px;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text);
+    width:100%;
+    outline:none;
+  }
+  .field input[type="text"]:focus-visible{
+    border-color:var(--focus);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 25%, transparent);
+  }
+  .field input.invalid{ border-color:var(--danger); }
+  .setup-hint{
+    font-size:13px; line-height:1.5; margin:-6px 0 0; color:var(--ink);
+    background:color-mix(in srgb, var(--ink) 10%, transparent);
+    padding:9px 11px; border-radius:10px;
+  }
+  .setup-links{ display:flex; flex-direction:column; gap:10px; align-items:center; }
+  .recovery-details{ background:var(--surface); border:1px solid var(--border-cool); border-radius:14px; padding:12px 14px; }
+  .recovery-details summary{ font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .recovery-details[open] summary{ margin-bottom:10px; }
+  .recovery-note{ font-size:12.5px; color:var(--text-muted); margin:0 0 8px; line-height:1.5; }
+
+  .btn{
+    font-family:'Chakra Petch', sans-serif;
+    font-weight:600;
+    font-size:16px;
+    letter-spacing:.02em;
+    border-radius:12px;
+    padding:14px 18px;
+    border:1.5px solid transparent;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:focus-visible{ outline:3px solid var(--focus); outline-offset:2px; }
+  .btn-block{ width:100%; }
+  .btn-lg{ font-size:17.5px; padding:17px 18px; }
+  .btn-primary{ background:var(--ink); color:var(--ink-contrast); }
+  .btn-primary:active{ background:var(--ink-strong); }
+  .btn-primary:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-ghost{ background:transparent; color:var(--text); border-color:var(--border-cool); }
+  .btn-ghost-danger{ background:transparent; color:var(--danger); border-color:var(--danger); }
+  .btn-ghost-danger:active{ background:var(--danger-soft); }
+
+  /* ---------- Tag card (entry) ---------- */
+  .tag-card{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:22px 20px 20px;
+    box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:14px;
+    overflow:hidden;
+  }
+  .grommet{
+    position:absolute; top:16px; left:16px;
+    width:13px; height:13px; border-radius:50%;
+    background:var(--bg);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.15);
+    border:1px solid var(--border);
+  }
+  .tag-meta{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding-left:26px;
+  }
+  .link-btn{
+    background:none; border:none; padding:0;
+    font-family:'Sarabun', sans-serif; font-size:13px; font-weight:600;
+    color:var(--ink); text-decoration:underline; cursor:pointer;
+  }
+  .tag-meta-actions{ display:flex; align-items:center; gap:14px; flex-shrink:0; }
+  .link-center{ align-self:center; text-align:center; }
+  .tag-no{
+    font-family:'Chakra Petch', monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight:700;
+    font-size:30px;
+    letter-spacing:.03em;
+    color:var(--text);
+    padding-left:26px;
+    margin:0;
+  }
+  .editing-flag{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:12px; font-weight:600; color:var(--ink);
+    background:color-mix(in srgb, var(--ink) 12%, transparent);
+    padding:3px 9px; border-radius:999px; margin-left:8px;
+  }
+
+  .field-row{ display:flex; gap:12px; padding-left:0; }
+  .field-row .field{ flex:1; }
+  .mono-input{ position:relative; }
+  .field .unit{
+    position:absolute; right:12px; bottom:12px;
+    font-family:'IBM Plex Mono', monospace; font-size:16px; color:var(--text-muted);
+    pointer-events:none;
+  }
+  .field-price .unit{ position:static; }
+  .price-row{ display:flex; align-items:center; gap:8px; }
+  .price-row input{ flex:1; }
+  .btn-expand{
+    flex-shrink:0;
+    width:42px; height:42px;
+    border-radius:10px;
+    border:1.5px solid var(--border-cool);
+    background:var(--surface-2);
+    color:var(--ink);
+    font-family:'Chakra Petch', sans-serif;
+    font-weight:700; font-size:19px;
+    cursor:pointer;
+  }
+  .btn-expand:disabled{ opacity:.45; color:var(--text-muted); cursor:default; }
+
+  .annot{ padding-left:26px; display:flex; flex-direction:column; gap:8px; }
+  .annot-head{ padding-left:0; }
+  .annot-text{
+    font-size:14px; color:var(--text); background:var(--surface-2);
+    border:1px dashed var(--border-cool); border-radius:10px; padding:9px 12px;
+    margin:0; cursor:pointer; line-height:1.5;
+  }
+  .btn-pill{
+    align-self:flex-start;
+    background:none;
+    border:1.5px dashed var(--border-cool);
+    color:var(--text-muted);
+    font-family:'Sarabun', sans-serif; font-size:13px; font-weight:600;
+    padding:7px 13px; border-radius:999px; cursor:pointer;
+  }
+  .btn-pill:active{ background:var(--surface-2); }
+  .annot-editor{ display:flex; gap:8px; align-items:flex-end; }
+  .annot-editor textarea{
+    flex:1; resize:none;
+    font-family:'Sarabun', sans-serif; font-size:14px;
+    border:1.5px solid var(--border); border-radius:10px;
+    background:var(--surface-2); color:var(--text);
+    padding:9px 11px; outline:none;
+  }
+  .annot-editor textarea:focus-visible{ border-color:var(--focus); }
+  .btn-check{
+    flex-shrink:0; width:40px; height:40px; border-radius:10px;
+    border:none; background:var(--success); color:#fff;
+    font-size:17px; font-weight:700; cursor:pointer;
+  }
+
+  .action-stack{ display:flex; flex-direction:column; gap:10px; }
+  .action-row{ display:flex; gap:10px; }
+  .action-row .btn{ flex:1; }
+
+  /* ---------- Saved list ---------- */
+  .saved-wrap{ display:flex; flex-direction:column; gap:8px; }
+  .saved-toggle{
+    display:flex; align-items:center; gap:10px;
+    background:none; border:none; padding:6px 2px; cursor:pointer;
+    font-family:'Sarabun', sans-serif; font-weight:600; font-size:14px; color:var(--text);
+  }
+  .badge{
+    background:var(--ink); color:var(--ink-contrast);
+    font-family:'IBM Plex Mono', monospace; font-size:12px; font-weight:600;
+    border-radius:999px; padding:1px 8px; min-width:20px; text-align:center;
+  }
+  .chev{ margin-left:auto; color:var(--text-muted); font-size:12px; }
+  .saved-list{ display:flex; flex-direction:column; gap:8px; }
+  .saved-row{
+    display:flex; align-items:center; gap:10px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:10px 12px;
+  }
+  .saved-row-main{ flex:1; min-width:0; }
+  .saved-row-no{ font-family:'Chakra Petch', monospace; font-weight:700; font-size:14.5px; }
+  .saved-row-meta{ font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--text-muted); font-variant-numeric: tabular-nums; }
+  .icon-btn{
+    background:none; border:none; cursor:pointer; font-size:16px;
+    width:32px; height:32px; border-radius:8px; color:var(--text-muted);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .icon-btn:active{ background:var(--surface-2); }
+  .icon-btn.danger{ color:var(--danger); }
+  .empty-note{ color:var(--text-muted); font-size:13.5px; padding:4px 2px; }
+
+  /* ---------- History screen ---------- */
+  .history-list{ display:flex; flex-direction:column; gap:8px; }
+  .history-row{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .history-row:active{ background:var(--surface-2); }
+  .history-row:focus-visible{ outline:3px solid var(--focus); outline-offset:2px; }
+  .saved-row-meta{ line-height:1.5; }
+  .history-chev{ color:var(--text-muted); font-size:20px; flex-shrink:0; }
+  .history-empty{ color:var(--text-muted); font-size:13.5px; padding:14px 4px; text-align:center; }
+
+  /* ---------- Result screen ---------- */
+  .result-strip{ display:flex; flex-direction:column; }
+  .ticket{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:34px 18px 18px; position:relative;
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+    transition: background-color .18s ease, border-color .18s ease, transform .1s ease;
+  }
+  .ticket:active{ transform:scale(0.985); }
+  .ticket:focus-visible{ outline:3px solid var(--focus); outline-offset:2px; }
+  .ticket.ticket-flash{ background:var(--success-soft); border-color:var(--success); }
+  .ticket + .ticket{ margin-top:0; }
+  .ticket-copy-hint{
+    position:absolute; top:12px; right:14px;
+    display:inline-flex; align-items:center;
+    font-family:'Sarabun', sans-serif; font-size:11px; font-weight:600;
+    color:var(--text-muted); background:var(--surface-2);
+    padding:4px 10px 4px 7px; border-radius:999px; pointer-events:none;
+    letter-spacing:.01em;
+  }
+  .copy-icon{ position:relative; display:inline-block; width:12px; height:12px; margin-right:5px; flex-shrink:0; }
+  .copy-icon::before, .copy-icon::after{
+    content:""; position:absolute; width:7px; height:7px;
+    border:1.3px solid currentColor; border-radius:1.5px; background:var(--surface-2);
+  }
+  .copy-icon::before{ top:0; left:0; }
+  .copy-icon::after{ bottom:0; right:0; }
+  .tear{
+    display:flex; align-items:center; gap:8px;
+    color:var(--border-cool); margin:2px 4px;
+  }
+  .tear::before, .tear::after{ content:""; flex:1; border-top:2px dashed var(--border-cool); }
+  .tear span{ font-size:11px; }
+  .ticket-line{ font-family:'IBM Plex Mono', monospace; font-size:14.5px; font-variant-numeric: tabular-nums; line-height:1.65; white-space:pre-wrap; }
+  .ticket-line.no{ font-weight:700; font-size:16px; font-family:'Chakra Petch', monospace; }
+  .ticket-line.muted{ color:var(--text-muted); font-family:'Sarabun', sans-serif; font-size:13.5px; }
+  .ticket-gap{ height:6px; }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(15,16,20,.5);
+    display:flex; align-items:flex-end; justify-content:center; z-index:50;
+    padding:16px;
+  }
+  @media (min-width:480px){ .modal-overlay{ align-items:center; } }
+  .modal{
+    width:100%; max-width:400px; background:var(--surface);
+    border:1px solid var(--border); border-radius:16px; padding:20px;
+    box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .modal-title{ font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:18px; margin:0; }
+  .modal-body{ font-size:14px; color:var(--text-muted); line-height:1.6; margin:0; }
+  .modal-actions{ display:flex; gap:10px; }
+  .modal-actions .btn{ flex:1; }
+  .manual-copy-area{
+    width:100%; resize:none;
+    font-family:'IBM Plex Mono', monospace; font-size:13.5px; line-height:1.6;
+    font-variant-numeric: tabular-nums;
+    border:1.5px solid var(--border); border-radius:10px;
+    background:var(--surface-2); color:var(--text);
+    padding:10px 12px; outline:none;
+  }
+  .manual-copy-area:focus-visible{ border-color:var(--focus); }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+    background:var(--ink); color:var(--ink-contrast);
+    font-family:'Sarabun', sans-serif; font-weight:600; font-size:14px;
+    padding:11px 18px; border-radius:999px; box-shadow:var(--shadow);
+    z-index:60; display:flex; align-items:center; gap:8px;
+  }
+  .toast.danger{ background:var(--danger); }
+
+  [hidden]{ display:none !important; }
+</style>
+
+<div id="app">
+  <a href="index.html" class="link-btn" style="display:inline-block;margin-bottom:-4px;">← เมนูหลัก</a>
+  <section id="screen-setup" class="screen">
+    <p class="eyebrow">เริ่มล็อตใหม่</p>
+    <h1>ตัวรันป้ายไซส์</h1>
+    <p class="lede">ตั้งชื่อล็อตและเลขเริ่มต้นครั้งเดียว ระบบจะรันเลขป้ายให้เองทุกครั้งที่กด “ถัดไป”</p>
+    <div class="setup-card">
+      <label class="field">
+        <span class="field-label">ชื่อล็อต</span>
+        <input id="lotNameInput" type="text" placeholder="เช่น SW" maxlength="8" autocapitalize="characters" autocomplete="off" />
+      </label>
+      <p class="setup-hint" id="setupExistingHint" hidden></p>
+      <label class="field" id="setupStartField">
+        <span class="field-label">เลขเริ่มต้น</span>
+        <input id="startNumberInput" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="เช่น 001" autocomplete="off" />
+      </label>
+      <button id="startBtn" class="btn btn-primary btn-block btn-lg" disabled>เริ่มบันทึก</button>
+    </div>
+    <div class="setup-links">
+      <button class="link-btn" id="viewHistoryBtn" type="button">ล็อตที่เคยทำไว้ทั้งหมด</button>
+      <button class="link-btn" id="restoreLinkBtn" type="button">มีข้อมูลสำรองไหม? กู้คืนที่นี่</button>
+    </div>
+    <details class="recovery-details" id="rawRecoveryDetails">
+      <summary>ตรวจสอบข้อมูลดิบในเครื่องนี้ตอนนี้ (กรณีสงสัยว่าข้อมูลหาย)</summary>
+      <p class="recovery-note" id="rawRecoveryNote"></p>
+      <textarea id="rawRecoveryArea" class="manual-copy-area" readonly rows="6"></textarea>
+    </details>
+  </section>
+
+  <section id="screen-history" class="screen" hidden>
+    <p class="eyebrow">ค้นหาล็อต</p>
+    <h2>ล็อตที่เคยทำไว้</h2>
+    <p class="lede">พิมพ์ชื่อล็อตเพื่อค้นหา หรือแตะรายการด้านล่างเพื่อเปิดดู</p>
+    <div class="setup-card" style="gap:14px;">
+      <label class="field">
+        <span class="field-label">ค้นหาล็อต</span>
+        <input id="historySearchInput" type="text" placeholder="พิมพ์ชื่อล็อต เช่น SW" maxlength="8" autocapitalize="characters" autocomplete="off" />
+      </label>
+    </div>
+    <div class="history-list" id="historyList"></div>
+    <button class="link-btn link-center" id="historyBackBtn" type="button">← กลับไปเริ่มล็อตใหม่</button>
+  </section>
+
+  <section id="screen-entry" class="screen" hidden>
+    <div class="tag-card">
+      <span class="grommet" aria-hidden="true"></span>
+
+      <div class="annot annot-head" id="headAnnotWrap">
+        <p class="annot-text" id="headAnnotText" hidden></p>
+        <button class="btn-pill" id="headEditBtn" type="button">+ Head Edit</button>
+        <div class="annot-editor" id="headEditor" hidden>
+          <textarea id="headEditInput" rows="2" placeholder="ข้อความหัวป้าย เช่น ชื่อร้าน"></textarea>
+          <button class="btn-check" id="headEditSave" type="button" aria-label="บันทึกหัวป้าย">✓</button>
+        </div>
+      </div>
+
+      <div class="tag-meta">
+        <span class="eyebrow" id="lotEyebrow">ล็อต · รายการที่ 1</span>
+        <span class="tag-meta-actions">
+          <button class="link-btn" id="backupBtn" type="button">สำรองข้อมูล</button>
+          <button class="link-btn" id="changeLotBtn" type="button">เปลี่ยนล็อต</button>
+        </span>
+      </div>
+
+      <p class="tag-no" id="tagNo">No.</p>
+      <button class="link-btn" id="cancelEditBtn" style="padding-left:26px; text-align:left;" hidden>ยกเลิกการแก้ไข</button>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">Chest</span>
+          <span class="mono-input" style="position:relative;">
+            <input id="chestInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="00" />
+            <span class="unit">"</span>
+          </span>
+        </label>
+        <label class="field">
+          <span class="field-label">Length</span>
+          <span class="mono-input" style="position:relative;">
+            <input id="lengthInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="00" />
+            <span class="unit">"</span>
+          </span>
+        </label>
+      </div>
+
+      <label class="field field-price">
+        <span class="field-label">Price</span>
+        <div class="price-row">
+          <input id="priceInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" />
+          <span class="unit">.-</span>
+          <button class="btn-expand" id="priceExpandBtn" type="button" title="เพิ่มหลักราคา">+</button>
+        </div>
+      </label>
+
+      <div class="annot annot-detail" id="detailAnnotWrap">
+        <p class="annot-text" id="detailAnnotText" hidden></p>
+        <button class="btn-pill" id="detailEditBtn" type="button">+ Edit Detail</button>
+        <div class="annot-editor" id="detailEditor" hidden>
+          <textarea id="detailEditInput" rows="2" placeholder="รายละเอียดเพิ่มเติม"></textarea>
+          <button class="btn-check" id="detailEditSave" type="button" aria-label="บันทึกรายละเอียด">✓</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-stack">
+      <button id="nextBtn" class="btn btn-primary btn-block btn-lg">ถัดไป</button>
+      <button id="finishBtn" class="btn btn-ghost-danger btn-block">เสร็จสิ้น</button>
+    </div>
+
+    <div class="saved-wrap">
+      <button class="saved-toggle" id="savedToggle" type="button">
+        <span>รายการที่บันทึกแล้ว</span>
+        <span class="badge" id="savedCount">0</span>
+        <span class="chev" id="savedChev">▾</span>
+      </button>
+      <div class="saved-list" id="savedList" hidden></div>
+    </div>
+  </section>
+
+  <section id="screen-result" class="screen" hidden>
+    <p class="eyebrow">สร้างข้อความสำเร็จ</p>
+    <h2 id="resultHeading"></h2>
+    <p class="lede" id="resultCountLede"></p>
+    <div class="result-strip" id="resultStrip"></div>
+    <div class="action-stack">
+      <button id="copyBtn" class="btn btn-primary btn-block btn-lg">คัดลอกทั้งหมด</button>
+      <button id="sendToPhotoBtn" class="btn btn-ghost btn-block">ส่งไปวางที่หน้าใส่รูป (SWEATER2HAND) →</button>
+      <div class="action-row">
+        <button id="backToEntryBtn" class="btn btn-ghost">ทำต่อ</button>
+        <button id="historyFromResultBtn" class="btn btn-ghost">ล็อตอื่น</button>
+      </div>
+      <button id="newLotBtn" class="btn btn-ghost-danger btn-block">เริ่มล็อตใหม่</button>
+    </div>
+  </section>
+
+  <div id="modalOverlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <p class="modal-title" id="modalTitle"></p>
+      <p class="modal-body" id="modalBody"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modalCancel">ยกเลิก</button>
+        <button class="btn btn-primary" id="modalConfirm">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="textModalOverlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <p class="modal-title">คัดลอกด้วยตนเอง</p>
+      <p class="modal-body">คัดลอกอัตโนมัติไม่สำเร็จ แตะค้างในกล่องข้อความด้านล่าง แล้วเลือก "เลือกทั้งหมด" ตามด้วย "คัดลอก"</p>
+      <textarea id="textModalArea" class="manual-copy-area" readonly rows="9"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-block" id="textModalClose">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="restoreModalOverlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <p class="modal-title">กู้คืนข้อมูลสำรอง</p>
+      <p class="modal-body">วางข้อความสำรองที่เคยคัดลอกเก็บไว้ (จาก Notes หรือที่อื่น) ลงในกล่องด้านล่าง แล้วกดกู้คืน</p>
+      <textarea id="restoreModalArea" class="manual-copy-area" rows="9" placeholder="วางข้อความสำรองตรงนี้"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="restoreModalCancel">ยกเลิก</button>
+        <button class="btn btn-primary" id="restoreModalConfirm">กู้คืน</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var STORAGE_KEY = "tagRunner_v1";
+
+  var defaultState = {
+    screen: "setup",
+    setupLot: "",
+    setupStart: "",
+    activeLot: "",
+    lots: {},
+    historyQuery: "",
+    draft: { chest:"", length:"", price:"", priceDigits:3, headText:"", detailText:"", editingId:null },
+    headEditorOpen: false,
+    detailEditorOpen: false,
+    savedListOpen: false
+  };
+
+  var state = loadState();
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return JSON.parse(JSON.stringify(defaultState));
+      var parsed = JSON.parse(raw);
+      if(parsed && !parsed.lots){
+        // migrate from the old single-active-lot shape so existing data is never wiped
+        if(parsed.lotName){
+          var lots = {};
+          lots[parsed.lotName] = {
+            nextNumberStr: parsed.nextNumberStr || "",
+            items: Array.isArray(parsed.items) ? parsed.items : [],
+            updatedAt: new Date().toISOString()
+          };
+          parsed = {
+            screen: (parsed.screen === "entry" || parsed.screen === "result") ? parsed.screen : "setup",
+            setupLot: parsed.setupLot || "",
+            setupStart: parsed.setupStart || "",
+            activeLot: parsed.lotName,
+            lots: lots,
+            draft: parsed.draft || defaultState.draft,
+            headEditorOpen: false, detailEditorOpen: false, savedListOpen: false,
+            historyQuery: ""
+          };
+        } else {
+          parsed = {};
+        }
+      }
+      var merged = Object.assign({}, defaultState, parsed);
+      merged.draft = Object.assign({}, defaultState.draft, parsed.draft || {});
+      merged.lots = (parsed && parsed.lots) ? parsed.lots : {};
+      Object.keys(merged.lots).forEach(function(name){
+        var l = merged.lots[name];
+        if(!l || typeof l !== "object"){ delete merged.lots[name]; return; }
+        if(!Array.isArray(l.items)) l.items = [];
+        if(typeof l.nextNumberStr !== "string") l.nextNumberStr = "";
+      });
+      return merged;
+    }catch(e){
+      return JSON.parse(JSON.stringify(defaultState));
+    }
+  }
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+    idbSet(state);
+  }
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+  // ---------- IndexedDB mirror (second, independent storage layer) ----------
+  // iOS/Safari has been observed to evict a web app's localStorage even when
+  // used correctly (Home Screen icon, normal browsing mode). IndexedDB is a
+  // separate storage subsystem with its own quota/eviction behavior, so
+  // mirroring every save into it gives a second chance to recover data that
+  // localStorage lost. This is a redundancy net, not a primary store.
+  var IDB_NAME = "tagRunnerDB_v1", IDB_STORE = "kv", IDB_KEY = "state";
+  function idbOpen(){
+    return new Promise(function(resolve){
+      try{
+        if(!window.indexedDB){ resolve(null); return; }
+        var req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = function(){
+          try{ req.result.createObjectStore(IDB_STORE); }catch(e){}
+        };
+        req.onsuccess = function(){ resolve(req.result); };
+        req.onerror = function(){ resolve(null); };
+      }catch(e){ resolve(null); }
+    });
+  }
+  function idbGet(){
+    return idbOpen().then(function(db){
+      if(!db) return null;
+      return new Promise(function(resolve){
+        try{
+          var tx = db.transaction(IDB_STORE, "readonly");
+          var req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+          req.onsuccess = function(){ resolve(req.result || null); };
+          req.onerror = function(){ resolve(null); };
+        }catch(e){ resolve(null); }
+      });
+    });
+  }
+  function idbSet(obj){
+    idbOpen().then(function(db){
+      if(!db) return;
+      try{
+        var tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).put(JSON.parse(JSON.stringify(obj)), IDB_KEY);
+      }catch(e){}
+    });
+  }
+  function countItems(s){
+    if(!s || !s.lots) return 0;
+    var n = 0;
+    Object.keys(s.lots).forEach(function(name){
+      var l = s.lots[name];
+      if(l && Array.isArray(l.items)) n += l.items.length;
+    });
+    return n;
+  }
+  function reconcileFromIdb(){
+    idbGet().then(function(idbState){
+      if(!idbState || !idbState.lots) return;
+      var changed = false;
+      Object.keys(idbState.lots).forEach(function(name){
+        var idbLot = idbState.lots[name];
+        var curLot = state.lots[name];
+        var idbCount = idbLot && Array.isArray(idbLot.items) ? idbLot.items.length : 0;
+        var curCount = curLot && Array.isArray(curLot.items) ? curLot.items.length : 0;
+        if(!curLot || idbCount > curCount){
+          state.lots[name] = idbLot;
+          changed = true;
+        }
+      });
+      if(changed){
+        // if the current screen/lot no longer makes sense (e.g. we were on
+        // a blank setup screen), keep the user on setup but the data is
+        // now recovered underneath — history/backup will show it.
+        try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+        render();
+        toast("กู้ข้อมูลที่หายไปจากตัวสำรองอัตโนมัติสำเร็จ");
+      }
+    });
+  }
+
+  function incrementCode(numStr){
+    var width = numStr.length;
+    var num = parseInt(numStr, 10) + 1;
+    var out = String(num);
+    if(out.length < width) out = out.padStart(width, "0");
+    return out;
+  }
+  function activeLot(){ return state.lots[state.activeLot]; }
+  function currentNo(){
+    var lot = activeLot();
+    if(!lot) return "";
+    if(state.draft.editingId){
+      var it = lot.items.find(function(x){ return x.id === state.draft.editingId; });
+      if(it) return it.no;
+    }
+    return state.activeLot + lot.nextNumberStr;
+  }
+  function touchLot(lot){ lot.updatedAt = new Date().toISOString(); }
+
+  // ---------- element refs ----------
+  var el = {};
+  ["screen-setup","screen-entry","screen-result","screen-history",
+   "lotNameInput","startNumberInput","startBtn","setupExistingHint","setupStartField",
+   "viewHistoryBtn","historySearchInput","historyList","historyBackBtn","historyFromResultBtn",
+   "rawRecoveryDetails","rawRecoveryNote","rawRecoveryArea",
+   "headAnnotText","headEditBtn","headEditor","headEditInput","headEditSave",
+   "lotEyebrow","changeLotBtn","backupBtn","tagNo","cancelEditBtn","restoreLinkBtn",
+   "restoreModalOverlay","restoreModalArea","restoreModalCancel","restoreModalConfirm",
+   "chestInput","lengthInput","priceInput","priceExpandBtn",
+   "detailAnnotText","detailEditBtn","detailEditor","detailEditInput","detailEditSave",
+   "nextBtn","finishBtn",
+   "savedToggle","savedCount","savedChev","savedList",
+   "resultHeading","resultCountLede","resultStrip","copyBtn","sendToPhotoBtn","backToEntryBtn","newLotBtn",
+   "modalOverlay","modalTitle","modalBody","modalCancel","modalConfirm",
+   "textModalOverlay","textModalArea","textModalClose",
+   "toast"
+  ].forEach(function(id){ el[id] = document.getElementById(id); });
+
+  function showScreen(name){
+    el["screen-setup"].hidden = name !== "setup";
+    el["screen-entry"].hidden = name !== "entry";
+    el["screen-result"].hidden = name !== "result";
+    el["screen-history"].hidden = name !== "history";
+  }
+
+  function toast(msg, danger){
+    el.toast.textContent = msg;
+    el.toast.classList.toggle("danger", !!danger);
+    el.toast.hidden = false;
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ el.toast.hidden = true; }, 2200);
+  }
+
+  var modalResolve = null;
+  function confirmModal(title, body, confirmLabel){
+    el.modalTitle.textContent = title;
+    el.modalBody.textContent = body;
+    el.modalConfirm.textContent = confirmLabel || "ยืนยัน";
+    el.modalOverlay.hidden = false;
+    return new Promise(function(resolve){ modalResolve = resolve; });
+  }
+  el.modalCancel.addEventListener("click", function(){ el.modalOverlay.hidden = true; if(modalResolve) modalResolve(false); });
+  el.modalConfirm.addEventListener("click", function(){ el.modalOverlay.hidden = true; if(modalResolve) modalResolve(true); });
+
+  // ---------- render ----------
+  function render(){
+    showScreen(state.screen);
+
+    if(state.screen === "setup"){
+      el.lotNameInput.value = state.setupLot || "";
+      el.startNumberInput.value = state.setupStart || "";
+      updateStartBtn();
+      renderRawRecovery();
+    }
+
+    if(state.screen === "entry"){
+      renderEntry();
+    }
+
+    if(state.screen === "result"){
+      renderResult();
+    }
+
+    if(state.screen === "history"){
+      renderHistory();
+    }
+  }
+
+  function updateStartBtn(){
+    var name = (state.setupLot || "").trim();
+    var existing = name ? state.lots[name] : null;
+    el.setupExistingHint.hidden = !existing;
+    if(existing){
+      el.setupExistingHint.textContent = "ล็อต " + name + " มีอยู่แล้ว (" + existing.items.length + " รายการ เลขล่าสุด " + name + existing.nextNumberStr + ") กด “ไปต่อ” เพื่อทำต่อจากเดิม";
+      el.setupStartField.hidden = true;
+      el.startBtn.textContent = "ไปต่อ";
+      el.startBtn.disabled = !name;
+    } else {
+      el.setupStartField.hidden = false;
+      el.startBtn.textContent = "เริ่มบันทึก";
+      var ok = name.length > 0 && /^[0-9]+$/.test(state.setupStart || "");
+      el.startBtn.disabled = !ok;
+    }
+  }
+
+  function renderRawRecovery(){
+    var n = countItems(state);
+    var lotCount = state.lots ? Object.keys(state.lots).length : 0;
+    if(n > 0){
+      el.rawRecoveryNote.textContent = "พบข้อมูลในเครื่องนี้: " + lotCount + " ล็อต รวม " + n + " รายการ ถ้าเห็นตัวเลขนี้แปลว่าข้อมูลยังอยู่";
+      el.rawRecoveryArea.value = buildBackupText();
+    } else {
+      el.rawRecoveryNote.textContent = "ไม่พบข้อมูลเก็บไว้ในเครื่องนี้เลยตอนนี้ (ล็อตหรือรายการเป็น 0)";
+      el.rawRecoveryArea.value = "(ไม่มีข้อมูล)";
+    }
+  }
+
+  function renderEntry(){
+    var lot = activeLot();
+    if(!lot){ state.screen = "setup"; render(); return; }
+    var editing = !!state.draft.editingId;
+    el.lotEyebrow.textContent = "ล็อต " + state.activeLot + " · " +
+      (editing ? "กำลังแก้ไข" : "รายการที่ " + (lot.items.length + 1));
+    el.tagNo.textContent = "No. " + currentNo();
+    el.cancelEditBtn.hidden = !editing;
+    el.nextBtn.textContent = editing ? "บันทึกการแก้ไข" : "ถัดไป";
+
+    el.chestInput.value = state.draft.chest;
+    el.lengthInput.value = state.draft.length;
+    el.priceInput.value = state.draft.price;
+    el.priceInput.maxLength = state.draft.priceDigits;
+    el.priceInput.placeholder = state.draft.priceDigits === 4 ? "0000" : "000";
+    el.priceExpandBtn.disabled = state.draft.priceDigits === 4;
+
+    renderAnnotation("head");
+    renderAnnotation("detail");
+    renderSavedList();
+  }
+
+  function renderAnnotation(kind){
+    var textEl = kind === "head" ? el.headAnnotText : el.detailAnnotText;
+    var btn = kind === "head" ? el.headEditBtn : el.detailEditBtn;
+    var editor = kind === "head" ? el.headEditor : el.detailEditor;
+    var input = kind === "head" ? el.headEditInput : el.detailEditInput;
+    var open = kind === "head" ? state.headEditorOpen : state.detailEditorOpen;
+    var value = kind === "head" ? state.draft.headText : state.draft.detailText;
+
+    editor.hidden = !open;
+    if(open){ input.value = value; }
+    textEl.hidden = open || !value;
+    if(!open && value){ textEl.textContent = value; }
+    btn.hidden = open;
+    btn.textContent = value ? ("แก้ไข " + (kind === "head" ? "Head Edit" : "Edit Detail")) : ("+ " + (kind === "head" ? "Head Edit" : "Edit Detail"));
+  }
+
+  function renderSavedList(){
+    var lot = activeLot();
+    var items = lot ? lot.items : [];
+    el.savedCount.textContent = items.length;
+    el.savedList.hidden = !state.savedListOpen;
+    el.savedChev.textContent = state.savedListOpen ? "▴" : "▾";
+    el.savedList.innerHTML = "";
+    if(items.length === 0){
+      var p = document.createElement("p");
+      p.className = "empty-note";
+      p.textContent = "ยังไม่มีรายการที่บันทึก";
+      el.savedList.appendChild(p);
+      return;
+    }
+    items.forEach(function(it){
+      var row = document.createElement("div");
+      row.className = "saved-row";
+      row.innerHTML =
+        '<div class="saved-row-main">' +
+          '<div class="saved-row-no mono">No. ' + escapeHtml(it.no) + '</div>' +
+          '<div class="saved-row-meta">' + escapeHtml(it.chest) + '" x ' + escapeHtml(it.length) + '" &middot; ' + escapeHtml(it.price) + '.-</div>' +
+        '</div>' +
+        '<button class="icon-btn" data-act="edit" data-id="' + it.id + '" aria-label="แก้ไข">&#9998;</button>' +
+        '<button class="icon-btn danger" data-act="delete" data-id="' + it.id + '" aria-label="ลบ">&#10005;</button>';
+      el.savedList.appendChild(row);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function formatItemLines(it){
+    var lines = [];
+    if(it.headText) lines.push(it.headText);
+    lines.push("No. " + it.no);
+    lines.push("");
+    lines.push('Chest : ' + it.chest + '"');
+    lines.push('Length : ' + it.length + '"');
+    lines.push("");
+    lines.push("Price : " + it.price + ".-");
+    if(it.detailText) lines.push(it.detailText);
+    return lines;
+  }
+  function formatItemText(it){ return formatItemLines(it).join("\n"); }
+
+  function renderResult(){
+    var lot = activeLot();
+    if(!lot){ state.screen = "history"; render(); return; }
+    el.resultHeading.innerHTML = 'ป้ายไซส์ล็อต <span class="mono">' + escapeHtml(state.activeLot) + '</span>';
+    el.resultCountLede.textContent = "รวม " + lot.items.length + " รายการ พร้อมคัดลอกไปวางได้ทันที";
+    el.resultStrip.innerHTML = "";
+    lot.items.forEach(function(it, idx){
+      if(idx > 0){
+        var tear = document.createElement("div");
+        tear.className = "tear";
+        tear.innerHTML = "<span>&#9986;</span>";
+        el.resultStrip.appendChild(tear);
+      }
+      var ticket = document.createElement("div");
+      ticket.className = "ticket";
+      ticket.setAttribute("data-id", it.id);
+      ticket.setAttribute("role", "button");
+      ticket.setAttribute("tabindex", "0");
+      ticket.setAttribute("aria-label", "แตะเพื่อคัดลอกรายการ No. " + it.no);
+      var htmlLines = [];
+      htmlLines.push('<span class="ticket-copy-hint"><span class="copy-icon" aria-hidden="true"></span>แตะเพื่อคัดลอก</span>');
+      if(it.headText) htmlLines.push('<div class="ticket-line">' + escapeHtml(it.headText) + '</div>');
+      htmlLines.push('<div class="ticket-line no">No. ' + escapeHtml(it.no) + '</div>');
+      htmlLines.push('<div class="ticket-gap"></div>');
+      htmlLines.push('<div class="ticket-line">Chest : ' + escapeHtml(it.chest) + '&quot;</div>');
+      htmlLines.push('<div class="ticket-line">Length : ' + escapeHtml(it.length) + '&quot;</div>');
+      htmlLines.push('<div class="ticket-gap"></div>');
+      htmlLines.push('<div class="ticket-line">Price : ' + escapeHtml(it.price) + '.-</div>');
+      if(it.detailText) htmlLines.push('<div class="ticket-line muted">' + escapeHtml(it.detailText) + '</div>');
+      ticket.innerHTML = htmlLines.join("");
+      el.resultStrip.appendChild(ticket);
+    });
+  }
+
+  function flashTicket(node){
+    node.classList.add("ticket-flash");
+    setTimeout(function(){ node.classList.remove("ticket-flash"); }, 480);
+  }
+  function copyTicketItem(id, node){
+    var lot = activeLot();
+    var it = lot ? lot.items.find(function(x){ return x.id === id; }) : null;
+    if(!it) return;
+    copyText(formatItemText(it), "คัดลอก No. " + it.no + " แล้ว");
+    if(node) flashTicket(node);
+  }
+  el.resultStrip.addEventListener("click", function(e){
+    var ticket = e.target.closest(".ticket");
+    if(!ticket) return;
+    copyTicketItem(ticket.getAttribute("data-id"), ticket);
+  });
+  el.resultStrip.addEventListener("keydown", function(e){
+    if(e.key !== "Enter" && e.key !== " ") return;
+    var ticket = e.target.closest(".ticket");
+    if(!ticket) return;
+    e.preventDefault();
+    copyTicketItem(ticket.getAttribute("data-id"), ticket);
+  });
+
+  // ---------- setup screen events ----------
+  el.lotNameInput.addEventListener("input", function(){
+    state.setupLot = el.lotNameInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    el.lotNameInput.value = state.setupLot;
+    updateStartBtn(); saveState();
+  });
+  el.startNumberInput.addEventListener("input", function(){
+    state.setupStart = el.startNumberInput.value.replace(/\D/g, "");
+    el.startNumberInput.value = state.setupStart;
+    updateStartBtn(); saveState();
+  });
+  el.startBtn.addEventListener("click", function(){
+    var name = state.setupLot;
+    if(!name) return;
+    if(!state.lots[name]){
+      if(!/^[0-9]+$/.test(state.setupStart || "")) return;
+      state.lots[name] = { nextNumberStr: state.setupStart, items: [], updatedAt: new Date().toISOString() };
+    }
+    state.activeLot = name;
+    state.draft = { chest:"", length:"", price:"", priceDigits:3, headText:"", detailText:"", editingId:null };
+    state.headEditorOpen = false; state.detailEditorOpen = false; state.savedListOpen = false;
+    state.screen = "entry";
+    saveState(); render();
+    el.chestInput.focus();
+  });
+  el.viewHistoryBtn.addEventListener("click", function(){
+    state.screen = "history"; saveState(); render();
+  });
+
+  // ---------- history screen ----------
+  function renderHistory(){
+    el.historySearchInput.value = state.historyQuery || "";
+    var query = (state.historyQuery || "").trim().toUpperCase();
+    var names = Object.keys(state.lots);
+    var filtered = query ? names.filter(function(n){ return n.indexOf(query) !== -1; }) : names.slice();
+    filtered.sort(function(a, b){
+      return (state.lots[b].updatedAt || "").localeCompare(state.lots[a].updatedAt || "");
+    });
+    el.historyList.innerHTML = "";
+    if(names.length === 0){
+      el.historyList.innerHTML = '<p class="history-empty">ยังไม่มีล็อตที่เคยบันทึกไว้</p>';
+      return;
+    }
+    if(filtered.length === 0){
+      el.historyList.innerHTML = '<p class="history-empty">ไม่พบล็อตที่ค้นหา</p>';
+      return;
+    }
+    filtered.forEach(function(name){
+      var lot = state.lots[name];
+      var row = document.createElement("div");
+      row.className = "saved-row history-row";
+      row.setAttribute("data-lot", name);
+      row.setAttribute("role", "button");
+      row.setAttribute("tabindex", "0");
+      var updated = lot.updatedAt ? new Date(lot.updatedAt).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }) : "-";
+      row.innerHTML =
+        '<div class="saved-row-main">' +
+          '<div class="saved-row-no mono">' + escapeHtml(name) + '</div>' +
+          '<div class="saved-row-meta">' + lot.items.length + ' รายการ &middot; เลขล่าสุด ' + escapeHtml(name + lot.nextNumberStr) + '<br/>แก้ไขล่าสุด ' + escapeHtml(updated) + '</div>' +
+        '</div>' +
+        '<span class="history-chev" aria-hidden="true">&#8250;</span>';
+      el.historyList.appendChild(row);
+    });
+  }
+  el.historySearchInput.addEventListener("input", function(){
+    state.historyQuery = el.historySearchInput.value.toUpperCase();
+    el.historySearchInput.value = state.historyQuery;
+    saveState(); renderHistory();
+  });
+  function openLotFromHistory(name){
+    state.activeLot = name;
+    state.screen = "result";
+    saveState(); render();
+  }
+  el.historyList.addEventListener("click", function(e){
+    var row = e.target.closest(".history-row");
+    if(!row) return;
+    openLotFromHistory(row.getAttribute("data-lot"));
+  });
+  el.historyList.addEventListener("keydown", function(e){
+    if(e.key !== "Enter" && e.key !== " ") return;
+    var row = e.target.closest(".history-row");
+    if(!row) return;
+    e.preventDefault();
+    openLotFromHistory(row.getAttribute("data-lot"));
+  });
+  el.historyBackBtn.addEventListener("click", function(){
+    state.screen = "setup"; saveState(); render();
+  });
+  el.historyFromResultBtn.addEventListener("click", function(){
+    state.screen = "history"; saveState(); render();
+  });
+
+  // ---------- entry screen: inputs ----------
+  el.chestInput.addEventListener("input", function(){
+    var v = el.chestInput.value.replace(/\D/g, "").slice(0,2);
+    el.chestInput.value = v; state.draft.chest = v; saveState();
+    if(v.length === 2) el.lengthInput.focus();
+  });
+  el.lengthInput.addEventListener("input", function(){
+    var v = el.lengthInput.value.replace(/\D/g, "").slice(0,2);
+    el.lengthInput.value = v; state.draft.length = v; saveState();
+    if(v.length === 2) el.priceInput.focus();
+  });
+  el.priceInput.addEventListener("input", function(){
+    var v = el.priceInput.value.replace(/\D/g, "").slice(0, state.draft.priceDigits);
+    el.priceInput.value = v; state.draft.price = v; saveState();
+  });
+  el.priceExpandBtn.addEventListener("click", function(){
+    state.draft.priceDigits = 4;
+    el.priceInput.maxLength = 4;
+    el.priceInput.placeholder = "0000";
+    el.priceExpandBtn.disabled = true;
+    saveState();
+  });
+
+  // ---------- annotations ----------
+  function openAnnotEditor(kind){
+    if(kind === "head") state.headEditorOpen = true; else state.detailEditorOpen = true;
+    saveState(); renderAnnotation(kind);
+    (kind === "head" ? el.headEditInput : el.detailEditInput).focus();
+  }
+  function saveAnnotEditor(kind){
+    var val = (kind === "head" ? el.headEditInput.value : el.detailEditInput.value).trim();
+    if(kind === "head"){ state.draft.headText = val; state.headEditorOpen = false; }
+    else { state.draft.detailText = val; state.detailEditorOpen = false; }
+    saveState(); renderAnnotation(kind);
+  }
+  el.headEditBtn.addEventListener("click", function(){ openAnnotEditor("head"); });
+  el.detailEditBtn.addEventListener("click", function(){ openAnnotEditor("detail"); });
+  el.headEditSave.addEventListener("click", function(){ saveAnnotEditor("head"); });
+  el.detailEditSave.addEventListener("click", function(){ saveAnnotEditor("detail"); });
+  el.headAnnotText.addEventListener("click", function(){ openAnnotEditor("head"); });
+  el.detailAnnotText.addEventListener("click", function(){ openAnnotEditor("detail"); });
+
+  // ---------- next / save edit ----------
+  function validateDraft(){
+    var ok = true;
+    [["chestInput", state.draft.chest], ["lengthInput", state.draft.length], ["priceInput", state.draft.price]].forEach(function(pair){
+      var invalid = !pair[1];
+      el[pair[0]].classList.toggle("invalid", invalid);
+      if(invalid) ok = false;
+    });
+    return ok;
+  }
+  function resetDraft(){
+    state.draft = { chest:"", length:"", price:"", priceDigits:3, headText:"", detailText:"", editingId:null };
+    state.headEditorOpen = false; state.detailEditorOpen = false;
+  }
+  el.nextBtn.addEventListener("click", function(){
+    var lot = activeLot();
+    if(!lot) return;
+    if(!validateDraft()){ toast("กรอก Chest, Length และ Price ให้ครบก่อน", true); return; }
+    if(state.draft.editingId){
+      var idx = lot.items.findIndex(function(x){ return x.id === state.draft.editingId; });
+      if(idx > -1){
+        lot.items[idx] = Object.assign({}, lot.items[idx], {
+          chest: state.draft.chest, length: state.draft.length, price: state.draft.price,
+          headText: state.draft.headText, detailText: state.draft.detailText
+        });
+      }
+      resetDraft();
+      toast("บันทึกการแก้ไขแล้ว");
+    } else {
+      var newItem = {
+        id: uid(), no: currentNo(),
+        chest: state.draft.chest, length: state.draft.length, price: state.draft.price,
+        headText: state.draft.headText, detailText: state.draft.detailText
+      };
+      lot.items.push(newItem);
+      lot.nextNumberStr = incrementCode(lot.nextNumberStr);
+      resetDraft();
+    }
+    touchLot(lot);
+    saveState(); render();
+    el.chestInput.focus();
+  });
+  el.cancelEditBtn.addEventListener("click", function(){
+    resetDraft(); saveState(); render();
+  });
+
+  // ---------- saved list actions ----------
+  el.savedToggle.addEventListener("click", function(){
+    state.savedListOpen = !state.savedListOpen; saveState(); renderSavedList();
+  });
+  el.savedList.addEventListener("click", function(e){
+    var btn = e.target.closest(".icon-btn");
+    if(!btn) return;
+    var lot = activeLot();
+    if(!lot) return;
+    var id = btn.getAttribute("data-id");
+    var act = btn.getAttribute("data-act");
+    var item = lot.items.find(function(x){ return x.id === id; });
+    if(!item) return;
+    if(act === "edit"){
+      state.draft = {
+        chest: item.chest, length: item.length, price: item.price,
+        priceDigits: item.price.length > 3 ? 4 : 3,
+        headText: item.headText || "", detailText: item.detailText || "",
+        editingId: item.id
+      };
+      state.headEditorOpen = false; state.detailEditorOpen = false;
+      saveState(); render();
+      window.scrollTo({top:0, behavior:"smooth"});
+    } else if(act === "delete"){
+      confirmModal("ลบรายการ No. " + item.no, "การลบจะไม่กระทบเลขที่รันไปแล้ว ยืนยันลบรายการนี้หรือไม่?", "ลบรายการ").then(function(ok){
+        if(!ok) return;
+        lot.items = lot.items.filter(function(x){ return x.id !== id; });
+        touchLot(lot);
+        if(state.draft.editingId === id) resetDraft();
+        saveState(); render();
+        toast("ลบรายการแล้ว");
+      });
+    }
+  });
+
+  // ---------- change lot ----------
+  el.changeLotBtn.addEventListener("click", function(){
+    state.screen = "history"; saveState(); render();
+  });
+
+  // ---------- backup / restore ----------
+  function buildBackupText(){
+    var payload = {
+      app: "tagrunner",
+      version: 2,
+      savedAt: new Date().toISOString(),
+      activeLot: state.activeLot,
+      lots: state.lots
+    };
+    return "[ตัวรันป้ายไซส์ - ข้อความสำรองข้อมูล อย่าลบหรือแก้ไขส่วนที่เป็นรหัสด้านล่าง]\n" + JSON.stringify(payload, null, 2);
+  }
+  function parseBackupText(raw){
+    if(!raw) return null;
+    var start = raw.indexOf("{");
+    var end = raw.lastIndexOf("}");
+    if(start === -1 || end === -1 || end < start) return null;
+    var obj;
+    try{ obj = JSON.parse(raw.slice(start, end + 1)); }catch(e){ return null; }
+    if(!obj || obj.app !== "tagrunner") return null;
+    if(obj.version === 2 && obj.lots && typeof obj.lots === "object") return obj;
+    if(obj.version === 1 && Array.isArray(obj.items)){
+      var lots = {};
+      lots[obj.lotName || "LOT"] = {
+        nextNumberStr: obj.nextNumberStr || "",
+        items: obj.items,
+        updatedAt: obj.savedAt || new Date().toISOString()
+      };
+      return { app: "tagrunner", version: 2, activeLot: obj.lotName || "", lots: lots };
+    }
+    return null;
+  }
+  el.backupBtn.addEventListener("click", function(){
+    if(Object.keys(state.lots).length === 0){
+      toast("ยังไม่มีข้อมูลให้สำรอง", true);
+      return;
+    }
+    copyText(buildBackupText(), "คัดลอกข้อมูลสำรองแล้ว วางเก็บไว้ใน Notes ได้เลย");
+  });
+  el.restoreLinkBtn.addEventListener("click", function(){
+    el.restoreModalArea.value = "";
+    el.restoreModalOverlay.hidden = false;
+    setTimeout(function(){ el.restoreModalArea.focus(); }, 30);
+  });
+  el.restoreModalCancel.addEventListener("click", function(){ el.restoreModalOverlay.hidden = true; });
+  el.restoreModalConfirm.addEventListener("click", function(){
+    var parsed = parseBackupText(el.restoreModalArea.value);
+    if(!parsed){
+      toast("ไม่พบข้อมูลสำรองที่ถูกต้องในข้อความนี้", true);
+      return;
+    }
+    el.restoreModalOverlay.hidden = true;
+    var mergedCount = 0;
+    Object.keys(parsed.lots).forEach(function(name){
+      state.lots[name] = parsed.lots[name];
+      mergedCount++;
+    });
+    if(parsed.activeLot && state.lots[parsed.activeLot]){
+      state.activeLot = parsed.activeLot;
+      state.screen = "entry";
+    } else {
+      state.screen = "history";
+    }
+    saveState(); render();
+    toast("กู้คืนสำเร็จ รวม " + mergedCount + " ล็อต");
+  });
+
+  // ---------- finish ----------
+  el.finishBtn.addEventListener("click", function(){
+    var lot = activeLot();
+    if(!lot) return;
+    var d = state.draft;
+    var filledCount = [d.chest, d.length, d.price].filter(Boolean).length;
+    if(filledCount === 3 && !d.editingId){
+      lot.items.push({
+        id: uid(), no: currentNo(),
+        chest: d.chest, length: d.length, price: d.price,
+        headText: d.headText, detailText: d.detailText
+      });
+      lot.nextNumberStr = incrementCode(lot.nextNumberStr);
+      touchLot(lot);
+      resetDraft();
+      saveState();
+    } else if(filledCount > 0 && filledCount < 3 && !d.editingId){
+      toast("กรอกรายการปัจจุบันให้ครบ หรือกด “ถัดไป” ก่อนกดเสร็จสิ้น", true);
+      return;
+    }
+    if(lot.items.length === 0){
+      toast("ยังไม่มีรายการที่บันทึกไว้", true);
+      return;
+    }
+    confirmModal("สร้างข้อความป้ายไซส์", "สร้างข้อความรวม " + lot.items.length + " รายการ ข้อมูลที่บันทึกไว้จะยังอยู่และแก้ไขได้ภายหลัง", "สร้างข้อความ").then(function(ok){
+      if(!ok) return;
+      state.screen = "result";
+      saveState(); render();
+    });
+  });
+
+  // ---------- result screen ----------
+  el.backToEntryBtn.addEventListener("click", function(){
+    state.screen = "entry"; saveState(); render();
+  });
+  el.newLotBtn.addEventListener("click", function(){
+    state.screen = "setup";
+    state.setupLot = ""; state.setupStart = "";
+    saveState(); render();
+  });
+  el.copyBtn.addEventListener("click", function(){
+    var lot = activeLot();
+    if(!lot) return;
+    var text = lot.items.map(formatItemText).join("\n\n\n");
+    copyText(text, "คัดลอกทั้งหมดแล้ว");
+  });
+  el.sendToPhotoBtn.addEventListener("click", function(){
+    var lot = activeLot();
+    if(!lot || lot.items.length === 0) return;
+    var text = lot.items.map(formatItemText).join("\n\n\n");
+    try{ localStorage.setItem("s2h_handoff_v1", text); }catch(e){}
+    location.href = "photo.html";
+  });
+  function copyText(text, successMsg){
+    var msg = successMsg || "คัดลอกแล้ว";
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){
+          toast(msg);
+        }).catch(function(){ fallbackCopy(text, msg); });
+        return;
+      }
+    }catch(e){ /* fall through */ }
+    fallbackCopy(text, msg);
+  }
+  function fallbackCopy(text, successMsg){
+    var msg = successMsg || "คัดลอกแล้ว";
+    var ok = false;
+    try{
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "0"; ta.style.left = "0";
+      ta.style.width = "1px"; ta.style.height = "1px";
+      ta.style.padding = "0"; ta.style.border = "none";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      var range = document.createRange();
+      range.selectNodeContents(ta);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      ta.setSelectionRange(0, text.length);
+      ok = document.execCommand("copy");
+      sel.removeAllRanges();
+      document.body.removeChild(ta);
+    }catch(e){ ok = false; }
+    if(ok){ toast(msg); }
+    else { showManualCopyModal(text); }
+  }
+  function showManualCopyModal(text){
+    el.textModalArea.value = text;
+    el.textModalOverlay.hidden = false;
+    setTimeout(function(){
+      el.textModalArea.focus();
+      try{ el.textModalArea.setSelectionRange(0, text.length); }catch(e){}
+    }, 30);
+  }
+  el.textModalClose.addEventListener("click", function(){ el.textModalOverlay.hidden = true; });
+
+  render();
+  reconcileFromIdb();
+})();
+</script>
+</body></html>
