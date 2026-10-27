@@ -207,7 +207,7 @@ button,select,input,label{touch-action:manipulation}
     <label class="f">ใส่ข้อมูลให้รูป
       <select id="pasteMode"><option value="order">ตามลำดับ: ชุดที่ 1 → ตัว #1, ชุดที่ 2 → ตัว #2 …</option><option value="code">ตามรหัสที่ตรงกัน</option></select>
     </label>
-    <div class="row"><button id="pasteGo" class="primary">เติมข้อมูล</button><button id="pasteRev">⇅ กลับลำดับ (ล่างขึ้นบน)</button></div>
+    <div class="row"><button id="pasteGo" class="primary">เติมข้อมูล</button><button id="pasteRev" aria-pressed="false">⇅ เติมจากล่างขึ้นบน: ปิด</button><button id="pasteClear" class="ghost small">ล้างช่องนี้</button></div>
     <div id="pasteRes" class="hint"></div>
   </details>
 
@@ -236,8 +236,8 @@ button,select,input,label{touch-action:manipulation}
       <label class="f">ขนาดวงกลม
         <select data-t="circle" id="t-circle"><option value="0.22">เล็ก</option><option value="0.27">กลาง</option><option value="0.32">ใหญ่</option></select>
       </label>
-      <label class="f">เงาตัวอักษร
-        <select data-t="shadow" id="t-shadow"><option value="1">มี</option><option value="0">ไม่มี</option></select>
+      <label class="f">ให้ตัวอักษรเด่นขึ้น
+        <select data-t="shadow" id="t-shadow"><option value="2">เงาเข้ม (แนะนำ)</option><option value="3">ขอบเข้มบาง ๆ</option><option value="4">เงาเข้ม + ขอบ</option><option value="1">เงาอ่อน</option><option value="0">ไม่มี</option></select>
       </label>
       <label class="f">ขอบวงกลม
         <select data-t="ring" id="t-ring"><option value="0">ไม่มี</option><option value="1">ขอบขาว</option></select>
@@ -308,10 +308,11 @@ let uid = 0; const nid = p => p + (++uid);
 
 /* ---------- template ---------- */
 const DEF = {shop:'SWEATER2HAND', footer:'โอนบัญชี : จันทริการ์ แก่นเมือง เท่านั้น !', font:'Mitr', weight:'300', color:'#ffffff',
-  side:'right', scale:'1', circle:'0.27', shadow:'1', ring:'0', unit:'"', lblChest:'Chest', lblLength:'Length', lblPrice:'Price',
+  side:'right', scale:'1', circle:'0.27', shadow:'2', ring:'0', unit:'"', lblChest:'Chest', lblLength:'Length', lblPrice:'Price',
   details:'0', maxSide:'2048'};
 let T = {...DEF};
 try { Object.assign(T, JSON.parse(localStorage.getItem('s2h-tpl-v1') || '{}')); } catch (e) {}
+if (!T.v3) { if (T.shadow === '1') T.shadow = '2'; T.v3 = 1; try { localStorage.setItem('s2h-tpl-v1', JSON.stringify(T)); } catch (e) {} }
 if (!T.v2) { T.details = '0'; T.v2 = 1; try { localStorage.setItem('s2h-tpl-v1', JSON.stringify(T)); } catch (e) {} }
 const saveT = () => { try { localStorage.setItem('s2h-tpl-v1', JSON.stringify(T)); } catch (e) {} };
 try { const sc = localStorage.getItem('s2h-sort'); if (sc) $('#sort').value = sc; } catch (e) {}
@@ -540,6 +541,7 @@ function clearAll(quiet) {
   const wasDemo = S.demo;
   S.photos.clear(); S.groups = []; thumbCache.clear(); S.demo = false; S.results = null;
   if (!wasDemo) dbClear();
+  if (!quiet) { $('#pasteTxt').value = ''; $('#pasteRes').textContent = ''; }
   render(); if (!quiet) toast('ล้างแล้ว');
 }
 
@@ -677,15 +679,28 @@ function lines(g) {
   return L;
 }
 function setFont(ctx, px, w) { ctx.font = `${w || T.weight} ${px}px "${T.font}", "IBM Plex Sans Thai", sans-serif`; try { ctx.letterSpacing = (px * 0.05).toFixed(1) + 'px'; } catch (e) {} }
+const isLightText = () => /^#(f|e|d)/i.test(T.color);
 function textStyle(ctx, px) {
-  ctx.fillStyle = T.color;
-  if (T.shadow === '1') { ctx.shadowColor = T.color === '#ffffff' ? 'rgba(0,0,0,.38)' : 'rgba(255,255,255,.45)'; ctx.shadowBlur = px * .28; ctx.shadowOffsetY = px * .04; }
+  ctx.fillStyle = T.color; ctx._px = px;
+  const dark = isLightText(), sh = T.shadow;
+  if (sh === '1') { ctx.shadowColor = dark ? 'rgba(0,0,0,.38)' : 'rgba(255,255,255,.45)'; ctx.shadowBlur = px * .28; ctx.shadowOffsetY = px * .04; }
+  else if (sh === '2' || sh === '4') { ctx.shadowColor = dark ? 'rgba(0,0,0,.7)' : 'rgba(255,255,255,.8)'; ctx.shadowBlur = px * .35; ctx.shadowOffsetY = px * .05; }
   else { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; }
+}
+function paintText(ctx, text, x, y, px) {
+  const sh = T.shadow;
+  if (sh === '2' || sh === '4') ctx.fillText(text, x, y); // first pass builds a denser shadow
+  if (sh === '3' || sh === '4') {
+    ctx.save(); ctx.shadowColor = 'transparent'; ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+    ctx.lineWidth = Math.max(1.5, px * .09); ctx.strokeStyle = isLightText() ? 'rgba(25,25,25,.75)' : 'rgba(255,255,255,.85)';
+    ctx.strokeText(text, x, y); ctx.restore();
+  }
+  ctx.save(); if (sh === '3' || sh === '4') ctx.shadowColor = 'transparent'; ctx.fillText(text, x, y); ctx.restore();
 }
 function fitText(ctx, text, x, y, px, maxW, w) {
   setFont(ctx, px, w); let m = ctx.measureText(text).width;
   if (m > maxW) { px = px * maxW / m; setFont(ctx, px, w); m = maxW; }
-  ctx.fillText(text, x, y); return m;
+  paintText(ctx, text, x, y, px); return m;
 }
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function defLayout() {
@@ -1196,20 +1211,24 @@ function parseRows(text) {
 function parsePaste(text) {
   return /^\s*(No|รหัส)\b|^\s*(Chest|อก|Length|Price|ราคา)\s*[:：]/im.test(text) ? parseBlocks(text) : parseRows(text);
 }
+let pasteRev = false;
+try { pasteRev = localStorage.getItem('s2h-rev') === '1'; } catch (e) {}
+function revLabel() {
+  const b = $('#pasteRev'); b.setAttribute('aria-pressed', String(pasteRev));
+  b.textContent = '⇅ เติมจากล่างขึ้นบน: ' + (pasteRev ? 'เปิด' : 'ปิด'); b.className = pasteRev ? 'primary' : '';
+  $('#pasteGo').className = pasteRev ? '' : 'primary';
+}
+revLabel();
 $('#pasteRev').onclick = () => {
-  const ta = $('#pasteTxt'), text = ta.value;
-  const isBlock = /^\s*(No|รหัส)\b|^\s*(Chest|อก|Length|Price|ราคา)\s*[:：]/im.test(text);
-  const list = parsePaste(text).reverse();
-  if (!list.length) { $('#pasteRes').textContent = 'ยังไม่มีข้อมูลให้กลับลำดับ'; return; }
-  const u = T.unit;
-  ta.value = isBlock
-    ? list.map(d => [d.top, 'No. ' + d.code, d.chest && `${T.lblChest} : ${d.chest}${u}`, d.length && `${T.lblLength} : ${d.length}${u}`,
-        d.price !== '' && `${T.lblPrice} : ${d.price}.-`, d.bottom].filter(Boolean).join('\n')).join('\n\n')
-    : list.map(d => [d.code, d.chest, d.length, d.price, d.bottom].join('\t').replace(/\t+$/, '')).join('\n');
-  $('#pasteRes').textContent = `กลับลำดับแล้ว ${list.length} ชุด: ตอนนี้ ${list[0].code || 'ชุดแรก'} อยู่บนสุด กด “เติมข้อมูล” เพื่อใส่ให้รูป`;
+  pasteRev = !pasteRev; try { localStorage.setItem('s2h-rev', pasteRev ? '1' : '0'); } catch (e) {}
+  revLabel();
+  const list = parsePaste($('#pasteTxt').value);
+  if (list.length) { const first = pasteRev ? list[list.length - 1] : list[0]; $('#pasteRes').textContent = `ตอนเติม ตัว #1 จะได้ ${first.code || 'ชุด' + (pasteRev ? 'ล่างสุด' : 'บนสุด')} กด “เติมข้อมูล” ได้เลย`; }
 };
+$('#pasteClear').onclick = () => { $('#pasteTxt').value = ''; $('#pasteRes').textContent = ''; $('#pasteTxt').focus(); };
 $('#pasteGo').onclick = () => {
   const list = parsePaste($('#pasteTxt').value);
+  if (pasteRev) list.reverse();
   const res = $('#pasteRes');
   if (!list.length) { res.textContent = 'ไม่พบข้อมูล ลองดูตัวอย่างรูปแบบในช่องวาง'; return; }
   const gs = S.groups.filter(g => live(g).length || g.hasSep);
@@ -1218,7 +1237,7 @@ $('#pasteGo').onclick = () => {
   if ($('#pasteMode').value === 'order') {
     const n = Math.min(gs.length, list.length);
     for (let i = 0; i < n; i++) apply(gs[i], list[i]);
-    msg = `อ่านได้ ${list.length} ชุด · เติมให้ตัว #1–#${n} แล้ว`;
+    msg = `อ่านได้ ${list.length} ชุด${pasteRev ? ' (จากล่างขึ้นบน)' : ''} · เติมให้ตัว #1–#${n} แล้ว · ตัว #1 = ${list[0].code || '-'}`;
     if (list.length !== gs.length) msg += ` · ⚠️ จำนวนไม่เท่ากัน: รูปมี ${gs.length} ตัว แต่ข้อมูลมี ${list.length} ชุด ตรวจว่ารหัสตรงกับรูปทุกตัว`;
   } else {
     const map = new Map(gs.filter(g => g.code).map(g => [g.code.toUpperCase(), g]));
