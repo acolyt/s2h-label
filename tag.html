@@ -1109,6 +1109,24 @@
   el.headAnnotText.addEventListener("click", function(){ openAnnotEditor("head"); });
   el.detailAnnotText.addEventListener("click", function(){ openAnnotEditor("detail"); });
 
+  // บันทึกข้อความ Head Edit / Edit Detail ทันทีที่พิมพ์ ไม่ต้องกด ✓ เพื่อยืนยัน
+  el.headEditInput.addEventListener("input", function(){
+    state.draft.headText = el.headEditInput.value;
+    saveState();
+  });
+  el.detailEditInput.addEventListener("input", function(){
+    state.draft.detailText = el.detailEditInput.value;
+    saveState();
+  });
+  el.headEditInput.addEventListener("blur", function(){
+    state.draft.headText = el.headEditInput.value.trim();
+    saveState();
+  });
+  el.detailEditInput.addEventListener("blur", function(){
+    state.draft.detailText = el.detailEditInput.value.trim();
+    saveState();
+  });
+
   // ---------- next / save edit ----------
   function validateDraft(){
     var ok = true;
