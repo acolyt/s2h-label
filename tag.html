@@ -139,6 +139,14 @@
     box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 25%, transparent);
   }
   .field input.invalid{ border-color:var(--danger); }
+  .mode-toggle{ display:flex; gap:10px; }
+  .mode-btn{
+    flex:1; font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:14.5px;
+    letter-spacing:.02em; padding:13px 10px; border-radius:12px;
+    border:1.5px solid var(--border-cool); background:var(--surface-2); color:var(--text-muted);
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .mode-btn.active{ background:var(--ink); color:var(--ink-contrast); border-color:var(--ink); }
   .setup-hint{
     font-size:13px; line-height:1.5; margin:-6px 0 0; color:var(--ink);
     background:color-mix(in srgb, var(--ink) 10%, transparent);
@@ -230,6 +238,12 @@
     pointer-events:none;
   }
   .field-price .unit{ position:static; }
+  .chest-row{ display:flex; align-items:center; gap:6px; }
+  .chest-row input{ flex:1; min-width:0; }
+  .chest-row .unit{ position:static; flex-shrink:0; }
+  .chest-dash{
+    font-family:'IBM Plex Mono', monospace; font-size:18px; color:var(--text-muted); flex-shrink:0;
+  }
   .price-row{ display:flex; align-items:center; gap:8px; }
   .price-row input{ flex:1; }
   .btn-expand{
@@ -410,6 +424,13 @@
     <h1>ตัวรันป้ายไซส์</h1>
     <p class="lede">ตั้งชื่อล็อตและเลขเริ่มต้นครั้งเดียว ระบบจะรันเลขป้ายให้เองทุกครั้งที่กด “ถัดไป”</p>
     <div class="setup-card">
+      <div class="field">
+        <span class="field-label">ประเภท</span>
+        <div class="mode-toggle" id="modeToggle" role="group" aria-label="เลือกประเภท">
+          <button type="button" class="mode-btn active" id="modeSweaterBtn" data-mode="sweater">SWEATER</button>
+          <button type="button" class="mode-btn" id="modeYarnBtn" data-mode="yarn">ไหมพรม</button>
+        </div>
+      </div>
       <label class="field">
         <span class="field-label">ชื่อล็อต</span>
         <input id="lotNameInput" type="text" placeholder="เช่น SW" maxlength="8" autocapitalize="characters" autocomplete="off" />
@@ -472,9 +493,11 @@
 
       <div class="field-row">
         <label class="field">
-          <span class="field-label">Chest</span>
-          <span class="mono-input" style="position:relative;">
+          <span class="field-label" id="chestLabel">Chest</span>
+          <span class="chest-row" id="chestRow">
             <input id="chestInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="00" />
+            <span class="chest-dash" id="chestDash" hidden>&ndash;</span>
+            <input id="chestInput2" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="00" hidden />
             <span class="unit">"</span>
           </span>
         </label>
@@ -583,10 +606,11 @@
     screen: "setup",
     setupLot: "",
     setupStart: "",
+    setupMode: "sweater",
     activeLot: "",
     lots: {},
     historyQuery: "",
-    draft: { chest:"", length:"", price:"", priceDigits:3, headText:"", detailText:"", editingId:null },
+    draft: { chest:"", chest2:"", length:"", price:"", priceDigits:3, headText:"", detailText:"", editingId:null },
     headEditorOpen: false,
     detailEditorOpen: false,
     savedListOpen: false
@@ -726,6 +750,8 @@
     return out;
   }
   function activeLot(){ return state.lots[state.activeLot]; }
+  function lotMode(lot){ return (lot && lot.mode === "yarn") ? "yarn" : "sweater"; }
+  function chestDisplay(it){ return it.chest2 ? (it.chest + "-" + it.chest2) : it.chest; }
   function currentNo(){
     var lot = activeLot();
     if(!lot) return "";
@@ -741,6 +767,7 @@
   var el = {};
   ["screen-setup","screen-entry","screen-result","screen-history",
    "lotNameInput","startNumberInput","startBtn","setupExistingHint","setupStartField",
+   "modeSweaterBtn","modeYarnBtn","chestLabel","chestRow","chestDash","chestInput2",
    "viewHistoryBtn","historySearchInput","historyList","historyBackBtn","historyFromResultBtn",
    "rawRecoveryDetails","rawRecoveryNote","rawRecoveryArea",
    "headAnnotText","headEditBtn","headEditor","headEditInput","headEditSave",
@@ -787,6 +814,9 @@
     showScreen(state.screen);
 
     if(state.screen === "setup"){
+      el.modeSweaterBtn.classList.toggle("active", state.setupMode !== "yarn");
+      el.modeYarnBtn.classList.toggle("active", state.setupMode === "yarn");
+      el.lotNameInput.maxLength = state.setupMode === "yarn" ? 20 : 8;
       el.lotNameInput.value = state.setupLot || "";
       el.startNumberInput.value = state.setupStart || "";
       updateStartBtn();
@@ -845,7 +875,13 @@
     el.cancelEditBtn.hidden = !editing;
     el.nextBtn.textContent = editing ? "บันทึกการแก้ไข" : "ถัดไป";
 
+    var isYarn = lotMode(lot) === "yarn";
+    el.chestDash.hidden = !isYarn;
+    el.chestInput2.hidden = !isYarn;
+    el.chestLabel.textContent = isYarn ? "Chest (ไซส์เล็ก–ใหญ่)" : "Chest";
+
     el.chestInput.value = state.draft.chest;
+    el.chestInput2.value = state.draft.chest2;
     el.lengthInput.value = state.draft.length;
     el.priceInput.value = state.draft.price;
     el.priceInput.maxLength = state.draft.priceDigits;
@@ -893,7 +929,7 @@
       row.innerHTML =
         '<div class="saved-row-main">' +
           '<div class="saved-row-no mono">No. ' + escapeHtml(it.no) + '</div>' +
-          '<div class="saved-row-meta">' + escapeHtml(it.chest) + '" x ' + escapeHtml(it.length) + '" &middot; ' + escapeHtml(it.price) + '.-</div>' +
+          '<div class="saved-row-meta">' + escapeHtml(chestDisplay(it)) + '" x ' + escapeHtml(it.length) + '" &middot; ' + escapeHtml(it.price) + '.-</div>' +
           (it.headText ? '<div class="saved-row-detail">หัวป้าย: ' + escapeHtml(it.headText) + '</div>' : '') +
           (it.detailText ? '<div class="saved-row-detail">ดีเทล: ' + escapeHtml(it.detailText) + '</div>' : '') +
         '</div>' +
@@ -914,7 +950,7 @@
     if(it.headText) lines.push(it.headText);
     lines.push("No. " + it.no);
     lines.push("");
-    lines.push('Chest : ' + it.chest + '"');
+    lines.push('Chest : ' + chestDisplay(it) + '"');
     lines.push('Length : ' + it.length + '"');
     lines.push("");
     lines.push("Price : " + it.price + ".-");
@@ -947,7 +983,7 @@
       if(it.headText) htmlLines.push('<div class="ticket-line">' + escapeHtml(it.headText) + '</div>');
       htmlLines.push('<div class="ticket-line no">No. ' + escapeHtml(it.no) + '</div>');
       htmlLines.push('<div class="ticket-gap"></div>');
-      htmlLines.push('<div class="ticket-line">Chest : ' + escapeHtml(it.chest) + '&quot;</div>');
+      htmlLines.push('<div class="ticket-line">Chest : ' + escapeHtml(chestDisplay(it)) + '&quot;</div>');
       htmlLines.push('<div class="ticket-line">Length : ' + escapeHtml(it.length) + '&quot;</div>');
       htmlLines.push('<div class="ticket-gap"></div>');
       htmlLines.push('<div class="ticket-line">Price : ' + escapeHtml(it.price) + '.-</div>');
@@ -982,8 +1018,28 @@
   });
 
   // ---------- setup screen events ----------
+  function filterLotName(raw){
+    if(state.setupMode === "yarn"){
+      return String(raw || "").replace(/[^A-Za-z0-9฀-๿]/g, "");
+    }
+    return String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  }
+  function applyMode(mode){
+    state.setupMode = mode === "yarn" ? "yarn" : "sweater";
+    el.modeSweaterBtn.classList.toggle("active", state.setupMode === "sweater");
+    el.modeYarnBtn.classList.toggle("active", state.setupMode === "yarn");
+    el.lotNameInput.maxLength = state.setupMode === "yarn" ? 20 : 8;
+    state.setupLot = filterLotName(state.setupLot);
+    el.lotNameInput.value = state.setupLot;
+  }
+  el.modeSweaterBtn.addEventListener("click", function(){
+    applyMode("sweater"); updateStartBtn(); saveState();
+  });
+  el.modeYarnBtn.addEventListener("click", function(){
+    applyMode("yarn"); updateStartBtn(); saveState();
+  });
   el.lotNameInput.addEventListener("input", function(){
-    state.setupLot = el.lotNameInput.value.toUpperCase().replace(/[^A-Z0-9฀-๿]/g, "");
+    state.setupLot = filterLotName(el.lotNameInput.value);
     el.lotNameInput.value = state.setupLot;
     updateStartBtn(); saveState();
   });
@@ -997,10 +1053,10 @@
     if(!name) return;
     if(!state.lots[name]){
       if(!/^[0-9]+$/.test(state.setupStart || "")) return;
-      state.lots[name] = { nextNumberStr: state.setupStart, items: [], updatedAt: new Date().toISOString() };
+      state.lots[name] = { nextNumberStr: state.setupStart, items: [], updatedAt: new Date().toISOString(), mode: state.setupMode };
     }
     state.activeLot = name;
-    state.draft = { chest:"", length:"", price:"", priceDigits:3, headText:"", detailText:"", editingId:null };
+    state.draft = { chest:"", chest2:"", length:"", price:"", priceDigits:3, headText:"", detailText:"", editingId:null };
     state.headEditorOpen = false; state.detailEditorOpen = false; state.savedListOpen = false;
     state.screen = "entry";
     saveState(); render();
@@ -1078,6 +1134,13 @@
   el.chestInput.addEventListener("input", function(){
     var v = el.chestInput.value.replace(/\D/g, "").slice(0,2);
     el.chestInput.value = v; state.draft.chest = v; saveState();
+    if(v.length === 2){
+      if(lotMode(activeLot()) === "yarn") el.chestInput2.focus(); else el.lengthInput.focus();
+    }
+  });
+  el.chestInput2.addEventListener("input", function(){
+    var v = el.chestInput2.value.replace(/\D/g, "").slice(0,2);
+    el.chestInput2.value = v; state.draft.chest2 = v; saveState();
     if(v.length === 2) el.lengthInput.focus();
   });
   el.lengthInput.addEventListener("input", function(){
@@ -1137,7 +1200,9 @@
   // ---------- next / save edit ----------
   function validateDraft(){
     var ok = true;
-    [["chestInput", state.draft.chest], ["lengthInput", state.draft.length], ["priceInput", state.draft.price]].forEach(function(pair){
+    var pairs = [["chestInput", state.draft.chest], ["lengthInput", state.draft.length], ["priceInput", state.draft.price]];
+    if(lotMode(activeLot()) === "yarn") pairs.push(["chestInput2", state.draft.chest2]);
+    pairs.forEach(function(pair){
       var invalid = !pair[1];
       el[pair[0]].classList.toggle("invalid", invalid);
       if(invalid) ok = false;
@@ -1145,18 +1210,18 @@
     return ok;
   }
   function resetDraft(){
-    state.draft = { chest:"", length:"", price:"", priceDigits:3, headText:"", detailText:"", editingId:null };
+    state.draft = { chest:"", chest2:"", length:"", price:"", priceDigits:3, headText:"", detailText:"", editingId:null };
     state.headEditorOpen = false; state.detailEditorOpen = false;
   }
   el.nextBtn.addEventListener("click", function(){
     var lot = activeLot();
     if(!lot) return;
-    if(!validateDraft()){ toast("กรอก Chest, Length และ Price ให้ครบก่อน", true); return; }
+    if(!validateDraft()){ toast(lotMode(lot) === "yarn" ? "กรอก Chest (2 ช่อง), Length และ Price ให้ครบก่อน" : "กรอก Chest, Length และ Price ให้ครบก่อน", true); return; }
     if(state.draft.editingId){
       var idx = lot.items.findIndex(function(x){ return x.id === state.draft.editingId; });
       if(idx > -1){
         lot.items[idx] = Object.assign({}, lot.items[idx], {
-          chest: state.draft.chest, length: state.draft.length, price: state.draft.price,
+          chest: state.draft.chest, chest2: state.draft.chest2, length: state.draft.length, price: state.draft.price,
           headText: state.draft.headText, detailText: state.draft.detailText
         });
       }
@@ -1165,7 +1230,7 @@
     } else {
       var newItem = {
         id: uid(), no: currentNo(),
-        chest: state.draft.chest, length: state.draft.length, price: state.draft.price,
+        chest: state.draft.chest, chest2: state.draft.chest2, length: state.draft.length, price: state.draft.price,
         headText: state.draft.headText, detailText: state.draft.detailText
       };
       lot.items.push(newItem);
@@ -1195,7 +1260,7 @@
     if(!item) return;
     if(act === "edit"){
       state.draft = {
-        chest: item.chest, length: item.length, price: item.price,
+        chest: item.chest, chest2: item.chest2 || "", length: item.length, price: item.price,
         priceDigits: item.price.length > 3 ? 4 : 3,
         headText: item.headText || "", detailText: item.detailText || "",
         editingId: item.id
@@ -1291,18 +1356,20 @@
     var lot = activeLot();
     if(!lot) return;
     var d = state.draft;
-    var filledCount = [d.chest, d.length, d.price].filter(Boolean).length;
-    if(filledCount === 3 && !d.editingId){
+    var isYarn = lotMode(lot) === "yarn";
+    var required = isYarn ? [d.chest, d.chest2, d.length, d.price] : [d.chest, d.length, d.price];
+    var filledCount = required.filter(Boolean).length;
+    if(filledCount === required.length && !d.editingId){
       lot.items.push({
         id: uid(), no: currentNo(),
-        chest: d.chest, length: d.length, price: d.price,
+        chest: d.chest, chest2: d.chest2, length: d.length, price: d.price,
         headText: d.headText, detailText: d.detailText
       });
       lot.nextNumberStr = incrementCode(lot.nextNumberStr);
       touchLot(lot);
       resetDraft();
       saveState();
-    } else if(filledCount > 0 && filledCount < 3 && !d.editingId){
+    } else if(filledCount > 0 && filledCount < required.length && !d.editingId){
       toast("กรอกรายการปัจจุบันให้ครบ หรือกด “ถัดไป” ก่อนกดเสร็จสิ้น", true);
       return;
     }
